@@ -1,0 +1,236 @@
+/* ── SettingsDomainsPage ─────────────────────────────────── */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 760px;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+/* ── Info banner ─────────────────────────────────────────── */
+
+.infoBanner {
+  background: #ede9fe;
+  border: 1px solid #c4b5fd;
+  border-radius: 12px;
+  padding: 16px 20px;
+}
+
+.infoBannerTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #5b21b6;
+  margin-bottom: 8px;
+}
+
+.infoBannerText {
+  font-size: 13px;
+  color: #4c1d95;
+  line-height: 1.6;
+}
+
+.codeBlock {
+  display: inline-block;
+  background: #fff;
+  border: 1px solid #c4b5fd;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-family: monospace;
+  font-size: 13px;
+  margin-top: 8px;
+}
+
+/* ── Add domain form ─────────────────────────────────────── */
+
+.addCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+
+.addTitle {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 14px;
+}
+
+.addRow {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+.input {
+  flex: 1;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.selectSmall {
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+}
+
+.btnAdd {
+  padding: 9px 18px;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  white-space: nowrap;
+  transition: opacity 0.15s;
+}
+.btnAdd:hover { opacity: 0.85; }
+.btnAdd:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.addError {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #ef4444;
+}
+
+/* ── Domains list ────────────────────────────────────────── */
+
+.listTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.domainCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: border-color 0.15s;
+}
+
+.domainCard + .domainCard {
+  margin-top: 8px;
+}
+
+.domainCard:hover {
+  border-color: var(--accent);
+}
+
+.domainIcon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.domainInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.domainName {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 3px;
+}
+
+.domainMeta {
+  font-size: 12px;
+  color: var(--text-muted);
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.domainActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badgePending  { background: #fef3c7; color: #92400e; }
+.badgeActive   { background: #d1fae5; color: #065f46; }
+.badgeError    { background: #fee2e2; color: #991b1b; }
+.badgeSuspend  { background: #f3f4f6; color: #374151; }
+
+.btnDelete {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: all 0.15s;
+}
+.btnDelete:hover { border-color: #ef4444; color: #ef4444; }
+
+/* ── CNAME instructions ──────────────────────────────────── */
+
+.cnameBox {
+  background: var(--bg-hover, rgba(0,0,0,.03));
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.cnameBox strong {
+  color: var(--text);
+}
+
+.cnameCode {
+  font-family: monospace;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 12px;
+  color: var(--accent);
+}
+
+/* ── Empty ───────────────────────────────────────────────── */
+
+.empty {
+  text-align: center;
+  padding: 40px 0;
+  color: var(--text-muted);
+  font-size: 13px;
+}

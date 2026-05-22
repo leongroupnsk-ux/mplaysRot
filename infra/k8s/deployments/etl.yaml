@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: etl
+  namespace: attribly
+  labels:
+    app: etl
+spec:
+  # Single replica — Kafka consumer group manages partition assignment.
+  # Scale by adding replicas only if KAFKA_GROUP_ID consumer lag grows.
+  replicas: 1
+  selector:
+    matchLabels:
+      app: etl
+  template:
+    metadata:
+      labels:
+        app: etl
+    spec:
+      terminationGracePeriodSeconds: 60
+      containers:
+        - name: etl
+          image: ghcr.io/YOUR_ORG/etl:latest
+          envFrom:
+            - configMapRef:
+                name: app-config
+            - secretRef:
+                name: app-secrets
+          env:
+            - name: SERVICE_NAME
+              value: etl
+          resources:
+            requests:
+              cpu: 200m
+              memory: 256Mi
+            limits:
+              cpu: 1000m
+              memory: 512Mi

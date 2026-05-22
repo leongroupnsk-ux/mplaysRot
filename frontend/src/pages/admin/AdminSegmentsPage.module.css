@@ -1,0 +1,32 @@
+.page { display: flex; flex-direction: column; gap: 20px; }
+.header { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.title { font-size: 26px; font-weight: 800; letter-spacing: -0.03em; color: #e2e4f0; margin: 0; }
+.subtitle { font-size: 13px; color: rgba(226,228,240,0.45); margin: 0; }
+
+.searchForm { display: flex; gap: 8px; }
+.searchInput { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 8px 12px; font-size: 13px; color: #e2e4f0; outline: none; width: 240px; font-family: inherit; }
+.searchInput:focus { border-color: #7b61ff; }
+.searchBtn { background: #7b61ff; color: #fff; border: none; border-radius: 8px; padding: 8px 14px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.clearBtn { background: transparent; border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; padding: 8px 12px; font-size: 13px; color: rgba(226,228,240,0.5); cursor: pointer; }
+
+.tableWrap { overflow-x: auto; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; background: #0f1120; }
+.table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.table th { padding: 10px 14px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: rgba(226,228,240,0.4); border-bottom: 1px solid rgba(255,255,255,0.06); text-align: left; }
+.table td { padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.04); color: #e2e4f0; vertical-align: middle; }
+.table tr:last-child td { border-bottom: none; }
+.cell { text-align: center; padding: 28px; color: rgba(226,228,240,0.35); }
+.tdMono { font-family: monospace; font-size: 12px; color: rgba(226,228,240,0.6); }
+.tdDate { color: rgba(226,228,240,0.45); white-space: nowrap; }
+.yes { color: #4ade80; }
+.no { color: rgba(226,228,240,0.25); }
+
+.status { padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; }
+.status_yellow { background: rgba(251,191,36,0.12); color: #fbbf24; }
+.status_blue   { background: rgba(96,165,250,0.12); color: #60a5fa; }
+.status_green  { background: rgba(74,222,128,0.12); color: #4ade80; }
+.status_red    { background: rgba(239,68,68,0.12);  color: #f87171; }
+.status_grey   { background: rgba(255,255,255,0.06); color: rgba(226,228,240,0.5); }
+
+.deleteBtn { background: transparent; border: 1px solid rgba(239,68,68,0.3); border-radius: 6px; padding: 4px 8px; font-size: 12px; color: #f87171; cursor: pointer; }
+.deleteBtn:hover:not(:disabled) { background: rgba(239,68,68,0.1); }
+.deleteBtn:disabled { opacity: 0.4; cursor: not-allowed; }

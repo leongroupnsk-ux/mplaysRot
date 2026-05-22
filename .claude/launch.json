@@ -1,0 +1,19 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "frontend",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--", "--port", "3001"],
+      "port": 3001,
+      "cwd": "/Users/nikitaosepkov/Desktop/клон mplays/frontend"
+    },
+    {
+      "name": "api-gateway",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "POSTGRES_HOST=localhost REDIS_HOST=localhost REDIS_PASSWORD='' uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"],
+      "port": 8000,
+      "cwd": "/Users/nikitaosepkov/Desktop/клон mplays/services/api-gateway"
+    }
+  ]
+}

@@ -1,0 +1,363 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+# Cancel in-progress runs on the same branch/PR so pushes don't queue up.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.12"
+  NODE_VERSION: "20"
+  # Minimal env for tests (real DB not needed — mocked in integration tests)
+  SECRET_KEY: "ci-test-secret-key-that-is-long-enough-32ch!"
+  POSTGRES_PASSWORD: "testpass"
+  CLICKHOUSE_PASSWORD: "testpass"
+  REDIS_PASSWORD: "testpass"
+  CELERY_BROKER_URL: "memory://"
+  CELERY_RESULT_BACKEND: "cache+memory://"
+  MINIO_ACCESS_KEY: "minioaccess"
+  MINIO_SECRET_KEY: "miniosecret"
+  GRAFANA_PASSWORD: "testpass"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# BACKEND
+# ─────────────────────────────────────────────────────────────────────────────
+
+jobs:
+  lint-backend:
+    name: "Backend · Lint (ruff)"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Install linters
+        run: pip install ruff
+
+      - name: Ruff — check
+        run: ruff check services/
+
+      - name: Ruff — format check
+        run: ruff format --check services/
+
+  # ---------------------------------------------------------------------------
+
+  test-backend:
+    name: "Backend · Integration tests (api-gateway)"
+    runs-on: ubuntu-latest
+    needs: lint-backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: services/api-gateway/requirements-test.txt
+
+      - name: Install dependencies
+        working-directory: services/api-gateway
+        run: pip install -r requirements-test.txt
+
+      - name: Run integration tests
+        working-directory: services/api-gateway
+        run: |
+          pytest tests/integration/ -v --tb=short \
+            --junit-xml=test-results/integration.xml
+        env:
+          SECRET_KEY: ${{ env.SECRET_KEY }}
+          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+          CLICKHOUSE_PASSWORD: ${{ env.CLICKHOUSE_PASSWORD }}
+          CELERY_BROKER_URL: ${{ env.CELERY_BROKER_URL }}
+          CELERY_RESULT_BACKEND: ${{ env.CELERY_RESULT_BACKEND }}
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-integration-results
+          path: services/api-gateway/test-results/
+
+  # ---------------------------------------------------------------------------
+
+  test-backend-unit:
+    name: "Backend · Unit tests"
+    runs-on: ubuntu-latest
+    needs: lint-backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: services/api-gateway/requirements-test.txt
+
+      - name: Install dependencies
+        working-directory: services/api-gateway
+        run: pip install -r requirements-test.txt
+
+      - name: Run unit tests
+        working-directory: services/api-gateway
+        run: |
+          pytest tests/unit/ -v --tb=short \
+            --junit-xml=test-results/unit.xml
+        env:
+          SECRET_KEY: ${{ env.SECRET_KEY }}
+          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+          CLICKHOUSE_PASSWORD: ${{ env.CLICKHOUSE_PASSWORD }}
+          CELERY_BROKER_URL: ${{ env.CELERY_BROKER_URL }}
+          CELERY_RESULT_BACKEND: ${{ env.CELERY_RESULT_BACKEND }}
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-unit-results
+          path: services/api-gateway/test-results/
+
+# ─────────────────────────────────────────────────────────────────────────────
+# FRONTEND
+# ─────────────────────────────────────────────────────────────────────────────
+
+  lint-frontend:
+    name: "Frontend · Lint + Type-check"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: TypeScript type-check (src)
+        working-directory: frontend
+        run: npm run type-check
+
+      - name: TypeScript type-check (e2e)
+        working-directory: frontend
+        run: node_modules/.bin/tsc --project tsconfig.e2e.json --noEmit
+
+      - name: ESLint
+        working-directory: frontend
+        run: npm run lint
+
+  # ---------------------------------------------------------------------------
+
+  test-frontend-unit:
+    name: "Frontend · Unit tests (Vitest)"
+    runs-on: ubuntu-latest
+    needs: lint-frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Run unit tests
+        working-directory: frontend
+        run: npm test
+
+  # ---------------------------------------------------------------------------
+
+  build-frontend:
+    name: "Frontend · Build"
+    runs-on: ubuntu-latest
+    needs: [lint-frontend, test-frontend-unit]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build
+        working-directory: frontend
+        run: npm run build
+        env:
+          VITE_API_URL: http://api-gateway:8000
+          VITE_REPORTING_URL: /api/reporting
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist/
+          retention-days: 3
+
+  # ---------------------------------------------------------------------------
+
+  test-e2e:
+    name: "Frontend · E2E (Playwright)"
+    runs-on: ubuntu-latest
+    needs: build-frontend
+    # E2E runs on push to main/develop and on PRs — but only when frontend changes
+    if: |
+      github.event_name == 'push' ||
+      contains(github.event.pull_request.changed_files, 'frontend/')
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Install Playwright browsers
+        working-directory: frontend
+        run: node_modules/.bin/playwright install --with-deps chromium
+
+      - name: Run E2E tests
+        working-directory: frontend
+        run: npm run test:e2e
+        env:
+          CI: true
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: frontend/playwright-report/
+          retention-days: 7
+
+# ─────────────────────────────────────────────────────────────────────────────
+# DOCKER BUILD
+# ─────────────────────────────────────────────────────────────────────────────
+
+  build-docker:
+    name: "Docker · Build ${{ matrix.service }}"
+    runs-on: ubuntu-latest
+    needs: [test-backend, test-backend-unit, build-frontend]
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - service: api-gateway
+            context: services/api-gateway
+            dockerfile: infra/docker/Dockerfile.python
+          - service: reporting
+            context: services/reporting
+            dockerfile: infra/docker/Dockerfile.python
+          - service: notifications
+            context: services/notifications
+            dockerfile: infra/docker/Dockerfile.python
+          - service: segmentation
+            context: services/segmentation
+            dockerfile: infra/docker/Dockerfile.python
+          - service: tracking
+            context: services/tracking
+            dockerfile: infra/docker/Dockerfile.python
+          - service: etl
+            context: services/etl
+            dockerfile: infra/docker/Dockerfile.python
+          - service: ml
+            context: services/ml
+            dockerfile: infra/docker/Dockerfile.python
+          - service: frontend
+            context: frontend
+            dockerfile: infra/docker/Dockerfile.node
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Docker meta (tags + labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}/${{ matrix.service }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix=sha-,format=short
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+
+      - name: Build (and push on main)
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
+          push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=${{ matrix.service }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.service }}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# STATUS CHECK (required for branch protection)
+# ─────────────────────────────────────────────────────────────────────────────
+
+  ci-pass:
+    name: "CI · All checks passed"
+    runs-on: ubuntu-latest
+    needs:
+      - lint-backend
+      - test-backend
+      - test-backend-unit
+      - lint-frontend
+      - test-frontend-unit
+      - build-frontend
+      - build-docker
+    if: always()
+    steps:
+      - name: Check all jobs passed
+        run: |
+          results='${{ toJSON(needs) }}'
+          echo "$results" | python3 -c "
+          import sys, json
+          needs = json.load(sys.stdin)
+          failed = [name for name, v in needs.items() if v['result'] not in ('success', 'skipped')]
+          if failed:
+              print('FAILED jobs:', failed)
+              sys.exit(1)
+          print('All required jobs passed.')
+          "

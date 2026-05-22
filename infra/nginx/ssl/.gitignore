@@ -1,0 +1,5 @@
+# Never commit real certificates
+*.pem
+*.crt
+*.key
+*.p12

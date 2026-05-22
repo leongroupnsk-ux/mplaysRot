@@ -1,0 +1,32 @@
+.page { display: flex; flex-direction: column; gap: 32px; }
+.header { display: flex; flex-direction: column; gap: 4px; }
+.title { font-size: 26px; font-weight: 800; letter-spacing: -0.03em; color: #e2e4f0; margin: 0; }
+.subtitle { font-size: 14px; color: rgba(226,228,240,0.5); margin: 0; }
+
+.section { display: flex; flex-direction: column; gap: 14px; }
+.sectionTitle { font-size: 16px; font-weight: 700; color: #e2e4f0; margin: 0; }
+.loading { font-size: 13px; color: rgba(226,228,240,0.4); }
+
+.tableWrap { overflow-x: auto; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; }
+.table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.table th { padding: 10px 14px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: rgba(226,228,240,0.4); border-bottom: 1px solid rgba(255,255,255,0.06); text-align: left; }
+.table td { padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.04); color: #e2e4f0; vertical-align: middle; }
+.table tr:last-child td { border-bottom: none; }
+.rowOff td { opacity: 0.4; }
+.empty { text-align: center; padding: 24px; color: rgba(226,228,240,0.35); }
+
+.code { background: rgba(255,255,255,0.06); border-radius: 4px; padding: 2px 6px; font-size: 12px; font-family: monospace; }
+.statusOn { background: rgba(74,222,128,0.12); color: #4ade80; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; }
+.statusOff { background: rgba(255,255,255,0.06); color: rgba(226,228,240,0.4); padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; }
+
+.actionBtn { background: transparent; border: 1px solid rgba(255,255,255,0.12); border-radius: 6px; padding: 4px 10px; font-size: 12px; color: rgba(226,228,240,0.6); cursor: pointer; }
+.actionBtn:hover { border-color: rgba(255,255,255,0.25); color: #e2e4f0; }
+.deleteBtn { background: transparent; border: 1px solid rgba(239,68,68,0.3); border-radius: 6px; padding: 4px 8px; font-size: 12px; color: #f87171; cursor: pointer; }
+.deleteBtn:hover { background: rgba(239,68,68,0.1); }
+
+.promoCreate { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.input { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 8px 12px; font-size: 13px; color: #e2e4f0; outline: none; font-family: inherit; }
+.input:focus { border-color: #7b61ff; }
+.createBtn { background: #7b61ff; color: #fff; border: none; border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.createBtn:disabled { opacity: 0.45; cursor: not-allowed; }
+.error { color: #f87171; font-size: 12px; }

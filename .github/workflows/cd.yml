@@ -1,0 +1,137 @@
+name: CD
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
+
+# Only one deploy at a time — cancel the queued one if a newer push lands.
+concurrency:
+  group: cd-production
+  cancel-in-progress: false   # never cancel an in-flight deploy; queue instead
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ghcr.io/${{ github.repository }}
+
+jobs:
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Gate: only deploy when CI passed
+  # ─────────────────────────────────────────────────────────────────────────────
+  gate:
+    name: "CD · Gate (CI must pass)"
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success'
+    outputs:
+      sha: ${{ steps.vars.outputs.sha }}
+    steps:
+      - name: Resolve short SHA
+        id: vars
+        run: echo "sha=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Deploy to Kubernetes
+  # ─────────────────────────────────────────────────────────────────────────────
+  deploy:
+    name: "Deploy · ${{ matrix.service }}"
+    runs-on: ubuntu-latest
+    needs: gate
+    environment: production
+
+    strategy:
+      fail-fast: false      # roll out all services even if one fails
+      max-parallel: 4
+      matrix:
+        service:
+          - api-gateway
+          - reporting
+          - notifications
+          - segmentation
+          - tracking
+          - etl
+          - ml
+          - frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: "v1.30.0"
+
+      - name: Configure kubeconfig
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBECONFIG_B64 }}" | base64 -d > ~/.kube/config
+          chmod 600 ~/.kube/config
+
+      - name: Verify cluster connectivity
+        run: kubectl cluster-info --request-timeout=10s
+
+      - name: Roll out ${{ matrix.service }}
+        env:
+          IMAGE: ${{ env.IMAGE_PREFIX }}/${{ matrix.service }}:sha-${{ needs.gate.outputs.sha }}
+          SERVICE: ${{ matrix.service }}
+          NS: attribly
+        run: |
+          kubectl set image deployment/${SERVICE} \
+            app=${IMAGE} \
+            -n ${NS} \
+            --record=false
+
+      - name: Wait for rollout
+        env:
+          SERVICE: ${{ matrix.service }}
+          NS: attribly
+        run: |
+          kubectl rollout status deployment/${SERVICE} \
+            -n ${NS} \
+            --timeout=300s
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Post-deploy smoke test
+  # ─────────────────────────────────────────────────────────────────────────────
+  smoke:
+    name: "Smoke · /health checks"
+    runs-on: ubuntu-latest
+    needs: deploy
+    environment: production
+
+    steps:
+      - name: Check api-gateway /health
+        run: |
+          curl --fail --silent --max-time 10 \
+            "${{ secrets.API_BASE_URL }}/health" | grep '"ok"'
+
+      - name: Check reporting /health
+        run: |
+          curl --fail --silent --max-time 10 \
+            "${{ secrets.REPORTING_BASE_URL }}/health" | grep '"ok"'
+
+      - name: Check ml /health
+        run: |
+          curl --fail --silent --max-time 10 \
+            "${{ secrets.ML_BASE_URL }}/health" | grep '"ok"'
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Notify on failure
+  # ─────────────────────────────────────────────────────────────────────────────
+  notify-failure:
+    name: "Notify · deploy failed"
+    runs-on: ubuntu-latest
+    needs: [deploy, smoke]
+    if: failure()
+    steps:
+      - name: Post to Slack
+        if: ${{ secrets.SLACK_WEBHOOK_URL != '' }}
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "text": ":red_circle: *Attribly CD failed* on `${{ github.sha }}` — <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|view run>"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK

@@ -1,0 +1,125 @@
+{
+  "title": "Attribution Pipeline",
+  "uid": "attribly-attribution",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "1m",
+  "time": { "from": "now-6h", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Clicks Ingested / min",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum(rate(clicks_ingested_total[1m])) by (platform)",
+          "legendFormat": "{{platform}}"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Orders Received / min",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum(rate(orders_received_total[1m])) by (marketplace)",
+          "legendFormat": "{{marketplace}}"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Attribution Rate (% orders matched)",
+      "type": "gauge",
+      "gridPos": { "x": 0, "y": 8, "w": 8, "h": 6 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum(rate(attributions_matched_total[5m])) / sum(rate(orders_received_total[5m])) * 100"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "steps": [
+              { "value": 0, "color": "red" },
+              { "value": 30, "color": "yellow" },
+              { "value": 60, "color": "green" }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 4,
+      "title": "Avg Confidence Score",
+      "type": "stat",
+      "gridPos": { "x": 8, "y": 8, "w": 8, "h": 6 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "avg(attribution_confidence_score)"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 3,
+          "thresholds": {
+            "steps": [
+              { "value": 0, "color": "red" },
+              { "value": 0.7, "color": "yellow" },
+              { "value": 0.85, "color": "green" }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 5,
+      "title": "Attribution Method Mix",
+      "type": "piechart",
+      "gridPos": { "x": 16, "y": 8, "w": 8, "h": 6 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum(attribution_by_method_total) by (method)",
+          "legendFormat": "{{method}}"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "ETL Normalizer Errors / min",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 14, "w": 12, "h": 8 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum(rate(etl_normalization_errors_total[1m])) by (error_type)",
+          "legendFormat": "{{error_type}}"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "ML Prediction Latency P95 (ms)",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 14, "w": 12, "h": 8 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(ml_prediction_duration_seconds_bucket[5m])) by (le, model)) * 1000",
+          "legendFormat": "{{model}}"
+        }
+      ]
+    }
+  ]
+}

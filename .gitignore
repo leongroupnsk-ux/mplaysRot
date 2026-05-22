@@ -1,0 +1,55 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build output
+dist/
+build/
+.vite/
+*.tsbuildinfo
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.venv/
+venv/
+env/
+*.egg-info/
+
+# Environment & secrets
+.env
+.env.local
+.env.*.local
+!.env.example
+!.env.test
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+._*
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# SSL private keys
+infra/nginx/ssl/key.pem
+
+# ML models (large binaries)
+*.pkl
+*.pt
+*.pth
+services/ml*/models/
+
+# Misc
+*.tmp
+*.bak
+.coverage

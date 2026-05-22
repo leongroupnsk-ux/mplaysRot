@@ -1,0 +1,274 @@
+/* ── LinksPage ─────────────────────────────────────────────── */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.title {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btnCreate {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 18px;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  transition: opacity 0.15s;
+}
+.btnCreate:hover { opacity: 0.85; }
+
+/* ── Filters ─────────────────────────────────────────────── */
+
+.filters {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.filterSelect {
+  padding: 7px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-card);
+  color: var(--text);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.searchInput {
+  padding: 7px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-card);
+  color: var(--text);
+  font-size: 13px;
+  width: 220px;
+}
+
+/* ── Stats row ───────────────────────────────────────────── */
+
+.statsRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.statCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+}
+
+.statLabel {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.statValue {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+/* ── Table ───────────────────────────────────────────────── */
+
+.tableWrap {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.table thead th {
+  padding: 11px 16px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.table tbody tr {
+  border-bottom: 1px solid var(--border);
+  transition: background 0.1s;
+}
+.table tbody tr:last-child { border-bottom: none; }
+.table tbody tr:hover { background: var(--bg-hover, rgba(0,0,0,.03)); }
+
+.table td {
+  padding: 12px 16px;
+  vertical-align: middle;
+}
+
+/* ── Product cell ────────────────────────────────────────── */
+
+.productCell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.productThumb {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: var(--border);
+}
+
+.productName {
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+
+.productSku {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* ── Short URL cell ──────────────────────────────────────── */
+
+.urlCell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.shortUrl {
+  font-family: monospace;
+  font-size: 12px;
+  color: var(--accent);
+}
+
+.copyBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: color 0.15s;
+}
+.copyBtn:hover { color: var(--text); }
+
+/* ── Badges ──────────────────────────────────────────────── */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badgeActive   { background: #d1fae5; color: #065f46; }
+.badgePaused   { background: #fef3c7; color: #92400e; }
+.badgeUnavail  { background: #fee2e2; color: #991b1b; }
+.badgeDeep     { background: #ede9fe; color: #5b21b6; }
+.badgeAuto     { background: #dbeafe; color: #1e40af; }
+.badgeWb       { background: #fce7f3; color: #9d174d; }
+.badgeOzon     { background: #e0f2fe; color: #075985; }
+
+/* ── Actions ─────────────────────────────────────────────── */
+
+.actionsCell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.actionBtn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: all 0.15s;
+}
+.actionBtn:hover { background: var(--bg-hover, rgba(0,0,0,.05)); color: var(--text); }
+.actionBtnDanger:hover { border-color: #ef4444; color: #ef4444; }
+.actionBtnStats:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ── Empty state ─────────────────────────────────────────── */
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 80px 0;
+  color: var(--text-muted);
+}
+
+.emptyIcon {
+  font-size: 48px;
+  opacity: 0.4;
+}
+
+.emptyTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.emptyHint {
+  font-size: 13px;
+  color: var(--text-muted);
+  text-align: center;
+  max-width: 360px;
+}
+
+/* ── Loading / error ─────────────────────────────────────── */
+
+.loading, .error {
+  text-align: center;
+  padding: 60px 0;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.error { color: #ef4444; }

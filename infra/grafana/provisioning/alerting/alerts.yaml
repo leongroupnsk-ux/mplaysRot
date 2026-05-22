@@ -1,0 +1,156 @@
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: api-gateway
+    folder: Attribly
+    interval: 1m
+    rules:
+      - uid: alert-5xx-rate
+        title: High 5xx Error Rate
+        condition: C
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            model:
+              expr: sum(rate(http_requests_total{job="api-gateway",status=~"5.."}[5m])) / sum(rate(http_requests_total{job="api-gateway"}[5m])) * 100
+              instant: true
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              conditions:
+                - evaluator: { params: [5], type: gt }
+                  query: { params: [A] }
+        noDataState: OK
+        execErrState: Error
+        for: 2m
+        annotations:
+          summary: "5xx rate exceeded 5% for 2 minutes"
+        labels:
+          severity: critical
+
+      - uid: alert-p95-latency
+        title: High API Latency P95
+        condition: C
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            model:
+              expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job="api-gateway"}[5m])) by (le)) * 1000
+              instant: true
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              conditions:
+                - evaluator: { params: [2000], type: gt }
+                  query: { params: [A] }
+        noDataState: OK
+        execErrState: Error
+        for: 5m
+        annotations:
+          summary: "P95 latency > 2000ms for 5 minutes"
+        labels:
+          severity: warning
+
+      - uid: alert-circuit-breaker
+        title: ClickHouse Circuit Breaker Open
+        condition: C
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            model:
+              expr: clickhouse_circuit_open{job="api-gateway"}
+              instant: true
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              conditions:
+                - evaluator: { params: [0.5], type: gt }
+                  query: { params: [A] }
+        noDataState: OK
+        execErrState: Error
+        for: 0s
+        annotations:
+          summary: "ClickHouse circuit breaker is OPEN — analytics queries returning empty data"
+        labels:
+          severity: critical
+
+  - orgId: 1
+    name: attribution-pipeline
+    folder: Attribly
+    interval: 5m
+    rules:
+      - uid: alert-low-attribution-rate
+        title: Low Attribution Rate
+        condition: C
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            model:
+              expr: sum(rate(attributions_matched_total[30m])) / sum(rate(orders_received_total[30m])) * 100
+              instant: true
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              conditions:
+                - evaluator: { params: [20], type: lt }
+                  query: { params: [A] }
+        noDataState: OK
+        execErrState: Error
+        for: 15m
+        annotations:
+          summary: "Attribution rate dropped below 20% for 15 minutes"
+        labels:
+          severity: warning
+
+      - uid: alert-roas-drop
+        title: ROAS Below Threshold
+        condition: C
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            model:
+              expr: avg_over_time(attribly_roas_1h[2h])
+              instant: true
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              conditions:
+                - evaluator: { params: [1.5], type: lt }
+                  query: { params: [A] }
+        noDataState: OK
+        execErrState: Error
+        for: 30m
+        annotations:
+          summary: "Average ROAS below 1.5 for 30 minutes — campaigns may be unprofitable"
+        labels:
+          severity: warning
+
+      - uid: alert-etl-errors
+        title: ETL Normalization Error Spike
+        condition: C
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            model:
+              expr: sum(rate(etl_normalization_errors_total[5m]))
+              instant: true
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              conditions:
+                - evaluator: { params: [10], type: gt }
+                  query: { params: [A] }
+        noDataState: OK
+        execErrState: Error
+        for: 5m
+        annotations:
+          summary: "ETL normalization errors exceed 10/min for 5 minutes"
+        labels:
+          severity: warning

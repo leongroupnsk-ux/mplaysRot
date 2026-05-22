@@ -1,0 +1,5 @@
+aiokafka==0.10.0
+clickhouse-connect==0.7.16
+pydantic==2.7.1
+pydantic-settings==2.2.1
+tenacity==8.3.0

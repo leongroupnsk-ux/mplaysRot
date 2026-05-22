@@ -1,0 +1,1375 @@
+openapi: 3.1.0
+
+info:
+  title: Attribly API
+  version: 0.1.0
+  description: |
+    Платформа мультиканальной атрибуции и аналитики внешнего трафика
+    для маркетплейсов и e-commerce.
+
+    **Аутентификация:** Bearer JWT во всех защищённых эндпоинтах.
+    Токены выдаются через `/auth/login` или `/auth/register`.
+
+servers:
+  - url: http://localhost:8000
+    description: Local development
+  - url: https://api.attribly.io
+    description: Production
+
+tags:
+  - name: auth
+    description: Регистрация, вход, обновление токенов
+  - name: campaigns
+    description: Управление кампаниями и трекинг-ссылками
+  - name: connections
+    description: Подключение рекламных кабинетов и маркетплейсов
+  - name: analytics
+    description: Аналитические отчёты и метрики
+  - name: attribution
+    description: Лог атрибуций и настройки окна
+  - name: segments
+    description: Аудитории и look-alike активации
+  - name: notifications
+    description: Внутренние уведомления пользователя
+  - name: webhooks
+    description: Входящие события от внешних систем
+
+# ─── Security ─────────────────────────────────────────────────────────────────
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - bearerAuth: []
+
+# ─── Reusable Schemas ─────────────────────────────────────────────────────────
+  schemas:
+
+    # ── Enums ──────────────────────────────────────────────────────────────────
+    AdPlatform:
+      type: string
+      enum: [yandex_direct, vk_ads, vk_blogger, telegram_ads, messenger_max]
+
+    Marketplace:
+      type: string
+      enum: [ozon, wildberries, yandex_market, amazon]
+
+    SegmentStatus:
+      type: string
+      enum: [pending, processing, uploaded, failed]
+
+    AttributionMethod:
+      type: string
+      enum: [strict, probabilistic]
+
+    NotificationType:
+      type: string
+      enum: [anomaly_detected, segment_ready, attribution_complete, low_roas, budget_depleted]
+
+    # ── Auth ───────────────────────────────────────────────────────────────────
+    RegisterRequest:
+      type: object
+      required: [email, password, full_name]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        full_name:
+          type: string
+          minLength: 2
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+
+    TokenResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+        token_type:
+          type: string
+          default: bearer
+
+    UserResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        full_name:
+          type: string
+        role:
+          type: string
+          enum: [owner, analyst]
+        created_at:
+          type: string
+          format: date-time
+
+    # ── Campaigns ──────────────────────────────────────────────────────────────
+    CampaignCreate:
+      type: object
+      required: [name, marketplace, ad_platform, destination_url]
+      properties:
+        name:
+          type: string
+        marketplace:
+          $ref: '#/components/schemas/Marketplace'
+        ad_platform:
+          $ref: '#/components/schemas/AdPlatform'
+        destination_url:
+          type: string
+          format: uri
+        budget:
+          type: number
+          format: float
+          minimum: 0
+        utm_source:
+          type: string
+        utm_medium:
+          type: string
+        utm_campaign:
+          type: string
+
+    CampaignResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        marketplace:
+          $ref: '#/components/schemas/Marketplace'
+        ad_platform:
+          $ref: '#/components/schemas/AdPlatform'
+        destination_url:
+          type: string
+        budget:
+          type: number
+          nullable: true
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    TrackingLinkResponse:
+      type: object
+      properties:
+        trax_id:
+          type: string
+          example: abc123xy
+        tracking_url:
+          type: string
+          format: uri
+          example: https://t.attribly.io/t/abc123xy
+        destination_url:
+          type: string
+          format: uri
+        label:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+
+    TrackingLinkCreate:
+      type: object
+      required: [label]
+      properties:
+        label:
+          type: string
+        destination_url:
+          type: string
+          format: uri
+          description: Переопределить URL кампании для этой ссылки
+        utm_content:
+          type: string
+        utm_term:
+          type: string
+
+    # ── Connections ────────────────────────────────────────────────────────────
+    AdConnectionCreate:
+      type: object
+      required: [platform, access_token]
+      properties:
+        platform:
+          $ref: '#/components/schemas/AdPlatform'
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+        account_id:
+          type: string
+
+    AdConnectionResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        platform:
+          $ref: '#/components/schemas/AdPlatform'
+        account_id:
+          type: string
+          nullable: true
+        account_name:
+          type: string
+          nullable: true
+        is_active:
+          type: boolean
+        last_synced_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    MarketplaceConnectionCreate:
+      type: object
+      required: [marketplace, api_key]
+      properties:
+        marketplace:
+          $ref: '#/components/schemas/Marketplace'
+        api_key:
+          type: string
+        client_id:
+          type: string
+
+    MarketplaceConnectionResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        marketplace:
+          $ref: '#/components/schemas/Marketplace'
+        client_id:
+          type: string
+          nullable: true
+        marketplace_name:
+          type: string
+          nullable: true
+        is_active:
+          type: boolean
+        last_synced_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    # ── Analytics ──────────────────────────────────────────────────────────────
+    OverviewResponse:
+      type: object
+      properties:
+        date_from:
+          type: string
+          format: date
+        date_to:
+          type: string
+          format: date
+        total_spend:
+          type: number
+          format: float
+        total_revenue:
+          type: number
+          format: float
+        roas:
+          type: number
+          format: float
+          description: total_revenue / total_spend
+        attributed_orders:
+          type: integer
+        click_to_order_rate:
+          type: number
+          format: float
+          description: Конверсия из клика в заказ (0–1)
+        avg_order_value:
+          type: number
+          format: float
+        previous_period:
+          type: object
+          description: Те же метрики за предыдущий аналогичный период
+          additionalProperties: true
+
+    FunnelStep:
+      type: object
+      properties:
+        name:
+          type: string
+          enum: [clicks, favorites, cart_adds, orders]
+        count:
+          type: integer
+        conversion_rate:
+          type: number
+          format: float
+          description: Конверсия от предыдущего шага (0–1)
+
+    FunnelResponse:
+      type: object
+      properties:
+        campaign_id:
+          type: string
+          format: uuid
+        steps:
+          type: array
+          items:
+            $ref: '#/components/schemas/FunnelStep'
+
+    TimeSeriesPoint:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        spend:
+          type: number
+          format: float
+        revenue:
+          type: number
+          format: float
+        clicks:
+          type: integer
+        orders:
+          type: integer
+        roas:
+          type: number
+          format: float
+
+    GeoPoint:
+      type: object
+      properties:
+        region:
+          type: string
+        clicks:
+          type: integer
+        orders:
+          type: integer
+        revenue:
+          type: number
+          format: float
+        conversion_rate:
+          type: number
+          format: float
+
+    TopCreativeRow:
+      type: object
+      properties:
+        external_ad_id:
+          type: string
+        ad_name:
+          type: string
+        ad_platform:
+          $ref: '#/components/schemas/AdPlatform'
+        spend:
+          type: number
+        clicks:
+          type: integer
+        orders:
+          type: integer
+        roas:
+          type: number
+
+    # ── Attribution ────────────────────────────────────────────────────────────
+    AttributionLogEntry:
+      type: object
+      properties:
+        attribution_id:
+          type: string
+          format: uuid
+        order_id:
+          type: string
+        campaign_id:
+          type: string
+          format: uuid
+        trax_id:
+          type: string
+        marketplace:
+          $ref: '#/components/schemas/Marketplace'
+        ad_platform:
+          $ref: '#/components/schemas/AdPlatform'
+        product_id:
+          type: string
+        order_amount:
+          type: number
+          format: float
+        click_at:
+          type: string
+          format: date-time
+        order_at:
+          type: string
+          format: date-time
+        hours_to_order:
+          type: number
+          format: float
+        confidence:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          description: Уверенность ML-модели (только для probabilistic)
+        attribution_method:
+          $ref: '#/components/schemas/AttributionMethod'
+        model_version:
+          type: string
+
+    AttributionSettings:
+      type: object
+      properties:
+        marketplace:
+          $ref: '#/components/schemas/Marketplace'
+        window_days:
+          type: integer
+          minimum: 1
+          maximum: 90
+        method:
+          $ref: '#/components/schemas/AttributionMethod'
+
+    # ── Segments ───────────────────────────────────────────────────────────────
+    SegmentUploadRequest:
+      type: object
+      required: [campaign_id, ad_platform]
+      properties:
+        campaign_id:
+          type: string
+          format: uuid
+        ad_platform:
+          $ref: '#/components/schemas/AdPlatform'
+        min_roas_threshold:
+          type: number
+          format: float
+          default: 3.0
+          description: Минимальный ROAS покупателей для включения в seed
+        lookalike:
+          type: boolean
+          default: false
+        lookalike_scale:
+          type: integer
+          minimum: 1
+          maximum: 10
+          default: 5
+          description: Масштаб look-alike (1 = узкий/качественный, 10 = широкий)
+
+    SegmentUploadResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        campaign_id:
+          type: string
+          format: uuid
+        ad_platform:
+          $ref: '#/components/schemas/AdPlatform'
+        lookalike:
+          type: boolean
+        seed_size:
+          type: integer
+          nullable: true
+        status:
+          $ref: '#/components/schemas/SegmentStatus'
+        external_segment_id:
+          type: string
+          nullable: true
+        error_message:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    # ── Notifications ──────────────────────────────────────────────────────────
+    NotificationResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        campaign_id:
+          type: string
+          format: uuid
+          nullable: true
+        type:
+          $ref: '#/components/schemas/NotificationType'
+        title:
+          type: string
+        body:
+          type: string
+        is_read:
+          type: boolean
+        payload:
+          type: object
+          nullable: true
+          additionalProperties: true
+        created_at:
+          type: string
+          format: date-time
+
+    # ── Errors ─────────────────────────────────────────────────────────────────
+    ErrorResponse:
+      type: object
+      properties:
+        detail:
+          type: string
+
+    ValidationError:
+      type: object
+      properties:
+        detail:
+          type: array
+          items:
+            type: object
+            properties:
+              loc:
+                type: array
+                items:
+                  type: string
+              msg:
+                type: string
+              type:
+                type: string
+
+  # ── Reusable Parameters ────────────────────────────────────────────────────
+  parameters:
+    DateFrom:
+      name: date_from
+      in: query
+      required: true
+      schema:
+        type: string
+        format: date
+      example: "2026-04-01"
+
+    DateTo:
+      name: date_to
+      in: query
+      required: true
+      schema:
+        type: string
+        format: date
+      example: "2026-04-28"
+
+    MarketplaceFilter:
+      name: marketplace
+      in: query
+      required: false
+      schema:
+        $ref: '#/components/schemas/Marketplace'
+
+    AdPlatformFilter:
+      name: ad_platform
+      in: query
+      required: false
+      schema:
+        $ref: '#/components/schemas/AdPlatform'
+
+    CampaignIdFilter:
+      name: campaign_id
+      in: query
+      required: false
+      schema:
+        type: string
+        format: uuid
+
+    Limit:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        default: 100
+        maximum: 1000
+
+    Offset:
+      name: offset
+      in: query
+      schema:
+        type: integer
+        default: 0
+
+  # ── Reusable Responses ─────────────────────────────────────────────────────
+  responses:
+    Unauthorized:
+      description: Не авторизован
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: Ресурс не найден
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    UnprocessableEntity:
+      description: Ошибка валидации
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationError'
+
+# ─── Paths ────────────────────────────────────────────────────────────────────
+paths:
+
+  # ── Auth ────────────────────────────────────────────────────────────────────
+  /auth/register:
+    post:
+      tags: [auth]
+      summary: Регистрация нового пользователя
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Успешная регистрация
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '409':
+          description: Email уже зарегистрирован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /auth/login:
+    post:
+      tags: [auth]
+      summary: Вход по email и паролю
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Токены выданы
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/refresh:
+    post:
+      tags: [auth]
+      summary: Обновление access-токена по refresh-токену
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refresh_token]
+              properties:
+                refresh_token:
+                  type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+          description: Новая пара токенов
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/me:
+    get:
+      tags: [auth]
+      summary: Данные текущего пользователя
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+          description: Профиль пользователя
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ── Campaigns ───────────────────────────────────────────────────────────────
+  /campaigns:
+    post:
+      tags: [campaigns]
+      summary: Создать кампанию
+      description: |
+        Создаёт кампанию и автоматически генерирует первую трекинг-ссылку
+        с `trax_id`. Ссылка доступна через `GET /campaigns/{id}/links`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CampaignCreate'
+      responses:
+        '201':
+          description: Кампания создана
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+    get:
+      tags: [campaigns]
+      summary: Список кампаний
+      parameters:
+        - $ref: '#/components/parameters/MarketplaceFilter'
+        - $ref: '#/components/parameters/AdPlatformFilter'
+        - name: is_active
+          in: query
+          schema:
+            type: boolean
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: Список кампаний
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CampaignResponse'
+
+  /campaigns/{campaign_id}:
+    get:
+      tags: [campaigns]
+      summary: Получить кампанию по ID
+      parameters:
+        - name: campaign_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Кампания
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags: [campaigns]
+      summary: Обновить кампанию (частично)
+      parameters:
+        - name: campaign_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                budget:
+                  type: number
+                is_active:
+                  type: boolean
+      responses:
+        '200':
+          description: Обновлённая кампания
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [campaigns]
+      summary: Удалить кампанию
+      parameters:
+        - name: campaign_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Удалено
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /campaigns/{campaign_id}/links:
+    get:
+      tags: [campaigns]
+      summary: Трекинг-ссылки кампании
+      parameters:
+        - name: campaign_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Список ссылок
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TrackingLinkResponse'
+
+    post:
+      tags: [campaigns]
+      summary: Создать дополнительную трекинг-ссылку
+      parameters:
+        - name: campaign_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TrackingLinkCreate'
+      responses:
+        '201':
+          description: Ссылка создана
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrackingLinkResponse'
+
+  # ── Connections ─────────────────────────────────────────────────────────────
+  /connections/ad-platforms:
+    get:
+      tags: [connections]
+      summary: Список подключённых рекламных кабинетов
+      responses:
+        '200':
+          description: Список подключений
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AdConnectionResponse'
+
+    post:
+      tags: [connections]
+      summary: Подключить рекламный кабинет
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdConnectionCreate'
+      responses:
+        '201':
+          description: Кабинет подключён
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdConnectionResponse'
+
+  /connections/ad-platforms/{connection_id}:
+    delete:
+      tags: [connections]
+      summary: Отключить рекламный кабинет
+      parameters:
+        - name: connection_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Отключено
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /connections/marketplaces:
+    get:
+      tags: [connections]
+      summary: Список подключённых маркетплейсов
+      responses:
+        '200':
+          description: Список подключений
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MarketplaceConnectionResponse'
+
+    post:
+      tags: [connections]
+      summary: Подключить маркетплейс
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MarketplaceConnectionCreate'
+      responses:
+        '201':
+          description: Маркетплейс подключён
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketplaceConnectionResponse'
+
+  /connections/marketplaces/{connection_id}:
+    delete:
+      tags: [connections]
+      summary: Отключить маркетплейс
+      parameters:
+        - name: connection_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Отключено
+
+  # ── Analytics ───────────────────────────────────────────────────────────────
+  /analytics/overview:
+    get:
+      tags: [analytics]
+      summary: Сводные метрики (ROAS, расходы, доход, заказы)
+      parameters:
+        - $ref: '#/components/parameters/DateFrom'
+        - $ref: '#/components/parameters/DateTo'
+        - $ref: '#/components/parameters/MarketplaceFilter'
+        - $ref: '#/components/parameters/AdPlatformFilter'
+        - $ref: '#/components/parameters/CampaignIdFilter'
+        - name: compare
+          in: query
+          schema:
+            type: boolean
+            default: false
+          description: Включить сравнение с предыдущим периодом
+      responses:
+        '200':
+          description: Сводные метрики
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OverviewResponse'
+
+  /analytics/timeseries:
+    get:
+      tags: [analytics]
+      summary: Временной ряд расходов, дохода и кликов по дням
+      parameters:
+        - $ref: '#/components/parameters/DateFrom'
+        - $ref: '#/components/parameters/DateTo'
+        - $ref: '#/components/parameters/MarketplaceFilter'
+        - $ref: '#/components/parameters/AdPlatformFilter'
+        - $ref: '#/components/parameters/CampaignIdFilter'
+        - name: granularity
+          in: query
+          schema:
+            type: string
+            enum: [day, week]
+            default: day
+      responses:
+        '200':
+          description: Временной ряд
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TimeSeriesPoint'
+
+  /analytics/funnel:
+    get:
+      tags: [analytics]
+      summary: Воронка конверсии кампании
+      parameters:
+        - name: campaign_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/DateFrom'
+        - $ref: '#/components/parameters/DateTo'
+      responses:
+        '200':
+          description: Воронка
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FunnelResponse'
+
+  /analytics/geo:
+    get:
+      tags: [analytics]
+      summary: Гео-разрез конверсий
+      parameters:
+        - $ref: '#/components/parameters/CampaignIdFilter'
+        - $ref: '#/components/parameters/DateFrom'
+        - $ref: '#/components/parameters/DateTo'
+        - $ref: '#/components/parameters/MarketplaceFilter'
+      responses:
+        '200':
+          description: Гео-карта
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GeoPoint'
+
+  /analytics/top-creatives:
+    get:
+      tags: [analytics]
+      summary: Топ объявлений/креативов по ROAS
+      parameters:
+        - $ref: '#/components/parameters/DateFrom'
+        - $ref: '#/components/parameters/DateTo'
+        - $ref: '#/components/parameters/AdPlatformFilter'
+        - $ref: '#/components/parameters/CampaignIdFilter'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Список объявлений
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TopCreativeRow'
+
+  /analytics/click-to-order-distribution:
+    get:
+      tags: [analytics]
+      summary: Гистограмма времени от клика до заказа
+      description: |
+        Используется для настройки окна атрибуции.
+        Возвращает распределение по бакетам (0–6ч, 6–24ч, 1–3д, 3–7д, 7–14д, 14–30д).
+      parameters:
+        - $ref: '#/components/parameters/CampaignIdFilter'
+        - $ref: '#/components/parameters/DateFrom'
+        - $ref: '#/components/parameters/DateTo'
+      responses:
+        '200':
+          description: Распределение
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    bucket_label:
+                      type: string
+                      example: "6–24ч"
+                    count:
+                      type: integer
+                    pct:
+                      type: number
+                      format: float
+
+  # ── Attribution ──────────────────────────────────────────────────────────────
+  /attribution/log:
+    get:
+      tags: [attribution]
+      summary: Детальный лог атрибутированных заказов
+      parameters:
+        - $ref: '#/components/parameters/DateFrom'
+        - $ref: '#/components/parameters/DateTo'
+        - $ref: '#/components/parameters/CampaignIdFilter'
+        - $ref: '#/components/parameters/MarketplaceFilter'
+        - name: min_confidence
+          in: query
+          schema:
+            type: number
+            format: float
+            minimum: 0
+            maximum: 1
+            default: 0
+        - name: method
+          in: query
+          schema:
+            $ref: '#/components/schemas/AttributionMethod'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: Лог атрибуций
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total:
+                    type: integer
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AttributionLogEntry'
+
+  /attribution/settings:
+    get:
+      tags: [attribution]
+      summary: Настройки окна атрибуции для каждого маркетплейса
+      responses:
+        '200':
+          description: Настройки
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AttributionSettings'
+
+    put:
+      tags: [attribution]
+      summary: Обновить настройки атрибуции
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AttributionSettings'
+      responses:
+        '200':
+          description: Обновлено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttributionSettings'
+
+  /attribution/{attribution_id}/confirm:
+    post:
+      tags: [attribution]
+      summary: Подтвердить атрибуцию вручную
+      description: |
+        Помечает атрибуцию как верифицированную пользователем.
+        Верифицированные записи используются как обучающие данные для переобучения ML-модели.
+      parameters:
+        - name: attribution_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Подтверждено
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ── Segments ─────────────────────────────────────────────────────────────────
+  /segments:
+    get:
+      tags: [segments]
+      summary: История загрузок сегментов
+      parameters:
+        - $ref: '#/components/parameters/CampaignIdFilter'
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/SegmentStatus'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: Список загрузок
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SegmentUploadResponse'
+
+  /segments/upload:
+    post:
+      tags: [segments]
+      summary: Запустить загрузку seed/look-alike сегмента в рекламный кабинет
+      description: |
+        Асинхронная операция. Возвращает ID задачи.
+        Статус отслеживается через `GET /segments/{id}`.
+        При `lookalike: true` сначала строится look-alike модель, затем загружается.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SegmentUploadRequest'
+      responses:
+        '202':
+          description: Задача принята в очередь
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SegmentUploadResponse'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /segments/{segment_id}:
+    get:
+      tags: [segments]
+      summary: Статус конкретной загрузки сегмента
+      parameters:
+        - name: segment_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Статус загрузки
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SegmentUploadResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ── Notifications ────────────────────────────────────────────────────────────
+  /notifications:
+    get:
+      tags: [notifications]
+      summary: Список уведомлений пользователя
+      parameters:
+        - name: unread_only
+          in: query
+          schema:
+            type: boolean
+            default: false
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: Уведомления
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NotificationResponse'
+
+  /notifications/read-all:
+    post:
+      tags: [notifications]
+      summary: Пометить все уведомления как прочитанные
+      responses:
+        '204':
+          description: Готово
+
+  /notifications/{notification_id}/read:
+    post:
+      tags: [notifications]
+      summary: Пометить одно уведомление как прочитанное
+      parameters:
+        - name: notification_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Готово
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ── Webhooks ─────────────────────────────────────────────────────────────────
+  /webhooks/telegram:
+    post:
+      tags: [webhooks]
+      summary: Входящие события от Telegram Ads
+      security: []
+      parameters:
+        - name: X-Telegram-Secret
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Payload от Telegram Ads API
+              additionalProperties: true
+      responses:
+        '200':
+          description: Принято
+        '403':
+          description: Неверная подпись
+
+  /webhooks/messenger-max:
+    post:
+      tags: [webhooks]
+      summary: Входящие события от Messenger MAX
+      security: []
+      parameters:
+        - name: X-Max-Signature
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: Принято
+        '403':
+          description: Неверная подпись

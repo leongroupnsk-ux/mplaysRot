@@ -1,0 +1,22 @@
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.highlight { border-color: var(--accent); background: var(--accent-dim); }
+
+.label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+
+.value { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; }
+
+.suffix { font-size: 14px; font-weight: 400; color: var(--text-muted); margin-left: 4px; }
+
+.delta { font-size: 12px; font-weight: 500; }
+
+.positive { color: var(--green); }
+.negative { color: var(--red); }

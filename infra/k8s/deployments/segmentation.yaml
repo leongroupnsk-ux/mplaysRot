@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: segmentation
+  namespace: attribly
+  labels:
+    app: segmentation
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: segmentation
+  template:
+    metadata:
+      labels:
+        app: segmentation
+    spec:
+      terminationGracePeriodSeconds: 60
+      containers:
+        - name: segmentation
+          image: ghcr.io/YOUR_ORG/segmentation:latest
+          command: ["python", "main.py"]
+          envFrom:
+            - configMapRef:
+                name: app-config
+            - secretRef:
+                name: app-secrets
+          env:
+            - name: SERVICE_NAME
+              value: segmentation
+          resources:
+            requests:
+              cpu: 200m
+              memory: 256Mi
+            limits:
+              cpu: 1000m
+              memory: 512Mi

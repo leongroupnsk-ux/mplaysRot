@@ -1,0 +1,345 @@
+/* ── CreateLinkModal ─────────────────────────────────────── */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal {
+  background: var(--bg-card);
+  border-radius: 14px;
+  width: 100%;
+  max-width: 620px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,.25);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Header ─────────────────────────────────────────────── */
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.title {
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 20px;
+  color: var(--text-muted);
+  line-height: 1;
+  padding: 4px;
+}
+
+/* ── Steps ───────────────────────────────────────────────── */
+
+.steps {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 0 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  position: relative;
+  cursor: default;
+  white-space: nowrap;
+}
+
+.step:not(:last-child)::after {
+  content: "›";
+  position: absolute;
+  right: -4px;
+  color: var(--text-muted);
+}
+
+.stepActive {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.stepNum {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.stepActive .stepNum {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* ── Body ────────────────────────────────────────────────── */
+
+.body {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  flex: 1;
+}
+
+/* ── Form elements ───────────────────────────────────────── */
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.input, .select, .textarea {
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+  width: 100%;
+  transition: border-color 0.15s;
+}
+
+.input:focus, .select:focus, .textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.textarea {
+  resize: vertical;
+  min-height: 70px;
+}
+
+.row2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: -4px;
+}
+
+.error {
+  font-size: 12px;
+  color: #ef4444;
+  padding: 10px 14px;
+  background: #fee2e2;
+  border-radius: 8px;
+}
+
+/* ── SKU verify block ────────────────────────────────────── */
+
+.skuVerify {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+}
+
+.skuVerify .input {
+  flex: 1;
+}
+
+.verifyBtn {
+  padding: 9px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  background: var(--bg-card);
+  color: var(--text);
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+.verifyBtn:hover { border-color: var(--accent); color: var(--accent); }
+.verifyBtn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.verifyResult {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 8px;
+  background: var(--bg-hover, rgba(0,0,0,.04));
+  border: 1px solid var(--border);
+}
+
+.verifyResultOk { background: #d1fae5; border-color: #6ee7b7; }
+.verifyResultErr { background: #fee2e2; border-color: #fca5a5; }
+
+.verifyThumb {
+  width: 44px;
+  height: 44px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.verifyInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.verifyTitle {
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 2px;
+}
+
+.verifyPrice {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.verifyMsg {
+  font-size: 12px;
+  color: #991b1b;
+}
+
+/* ── UTM grid ────────────────────────────────────────────── */
+
+.utmGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+/* ── Preview block ───────────────────────────────────────── */
+
+.previewCard {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.previewImg {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+}
+
+.previewBody {
+  padding: 14px;
+}
+
+.previewTitle {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.previewPrice {
+  color: var(--text-muted);
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+
+.previewUrl {
+  font-family: monospace;
+  font-size: 12px;
+  color: var(--accent);
+  word-break: break-all;
+}
+
+.previewBtns {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.previewBtnApp {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  text-align: center;
+  background: #5b21b6;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.previewBtnWeb {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  text-align: center;
+  border: 1px solid var(--border);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+/* ── Footer ──────────────────────────────────────────────── */
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  border-top: 1px solid var(--border);
+  gap: 12px;
+}
+
+.btnBack {
+  padding: 9px 18px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  background: none;
+  color: var(--text);
+  transition: all 0.15s;
+}
+.btnBack:hover { background: var(--bg-hover, rgba(0,0,0,.05)); }
+
+.btnNext {
+  padding: 9px 22px;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  border: none;
+}
+.btnNext:hover { opacity: 0.85; }
+.btnNext:disabled { opacity: 0.5; cursor: not-allowed; }

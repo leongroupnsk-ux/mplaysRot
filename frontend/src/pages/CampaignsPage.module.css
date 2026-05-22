@@ -1,0 +1,174 @@
+.btnCreate {
+  padding: 9px 20px;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  transition: opacity 0.15s;
+  white-space: nowrap;
+}
+.btnCreate:hover { opacity: 0.85; }
+
+/* Empty state */
+.empty {
+  color: var(--text-muted);
+  font-size: 13px;
+  padding: 40px 0;
+  text-align: center;
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 60px 0;
+}
+
+.emptyTitle {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.emptyHint {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+/* Table */
+.tableWrap {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.table thead th {
+  padding: 11px 16px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.row {
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.row:hover { background: var(--bg-hover); }
+.row + .row { border-top: 1px solid var(--border); }
+
+.row td {
+  padding: 13px 16px;
+  vertical-align: middle;
+}
+
+/* Name cell */
+.nameCell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.name {
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 280px;
+}
+
+/* Status dots */
+.dotActive {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  flex-shrink: 0;
+}
+
+.dotPaused {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  flex-shrink: 0;
+}
+
+/* Badges */
+.badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 500;
+  background: var(--bg-hover);
+  color: var(--text-muted);
+}
+
+.badgeAd {
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+
+/* Status text */
+.statusActive {
+  font-size: 12px;
+  color: var(--green);
+}
+
+.statusPaused {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* Budget / muted */
+.budget { font-variant-numeric: tabular-nums; }
+
+.muted { color: var(--text-muted); }
+
+/* Actions column */
+.actions { white-space: nowrap; }
+
+.btnEdit {
+  padding: 5px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-right: 6px;
+  transition: border-color 0.15s, color 0.15s;
+}
+.btnEdit:hover { border-color: var(--accent); color: var(--accent); }
+
+.btnPause {
+  padding: 5px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+  transition: border-color 0.15s, color 0.15s;
+}
+.btnPause:hover { border-color: var(--yellow); color: var(--yellow); }
+
+.btnResume {
+  padding: 5px 12px;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--accent);
+  transition: opacity 0.15s;
+}
+.btnResume:hover { opacity: 0.75; }

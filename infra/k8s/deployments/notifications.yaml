@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notifications
+  namespace: attribly
+  labels:
+    app: notifications
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notifications
+  template:
+    metadata:
+      labels:
+        app: notifications
+    spec:
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: notifications
+          image: ghcr.io/YOUR_ORG/notifications:latest
+          ports:
+            - containerPort: 8003
+          command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8003"]
+          envFrom:
+            - configMapRef:
+                name: app-config
+            - secretRef:
+                name: app-secrets
+          env:
+            - name: SERVICE_NAME
+              value: notifications
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8003
+            initialDelaySeconds: 10
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: notifications
+  namespace: attribly
+spec:
+  selector:
+    app: notifications
+  ports:
+    - port: 8003
+      targetPort: 8003

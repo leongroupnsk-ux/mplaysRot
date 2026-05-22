@@ -1,0 +1,43 @@
+# Apply all manifests:
+#   kubectl apply -k infra/k8s/
+#
+# Prerequisites:
+#   1. Create the namespace:    kubectl apply -f infra/k8s/namespace.yaml
+#   2. Create the secret:       cp infra/k8s/secrets/app-secrets.yaml.example \
+#                                  infra/k8s/secrets/app-secrets.yaml
+#                               # fill in values, then:
+#                               kubectl apply -f infra/k8s/secrets/app-secrets.yaml
+#   3. Replace YOUR_ORG in all deployment files with your GitHub org name.
+#   4. Apply: kubectl apply -k infra/k8s/
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: attribly
+
+resources:
+  # Namespace (idempotent — safe to re-apply)
+  - namespace.yaml
+
+  # Config
+  - configmaps/app-config.yaml
+
+  # Application deployments + services
+  - deployments/api-gateway.yaml
+  - deployments/frontend.yaml
+  - deployments/tracking.yaml
+  - deployments/reporting.yaml
+  - deployments/notifications.yaml
+  - deployments/etl.yaml
+  - deployments/segmentation.yaml
+  - deployments/ml.yaml
+  - deployments/celery-worker.yaml
+  - deployments/celery-beat.yaml
+
+  # Autoscalers
+  - hpa/api-gateway.yaml
+  - hpa/tracking.yaml
+  - hpa/reporting.yaml
+
+  # Ingress (requires nginx ingress controller in the cluster)
+  - ingress/ingress.yaml

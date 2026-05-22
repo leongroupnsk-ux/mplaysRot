@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "moduleResolution": "node",
+    "allowImportingTsExtensions": false,
+    "noEmit": true,
+    "isolatedModules": false,
+    "types": ["node"]
+  },
+  "include": ["e2e", "playwright.config.ts"]
+}

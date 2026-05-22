@@ -1,0 +1,133 @@
+{
+  "title": "Business KPIs",
+  "uid": "attribly-kpis",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "5m",
+  "time": { "from": "now-24h", "to": "now" },
+  "templating": {
+    "list": [
+      {
+        "name": "marketplace",
+        "type": "custom",
+        "options": [
+          { "text": "All", "value": "" },
+          { "text": "Ozon", "value": "ozon" },
+          { "text": "Wildberries", "value": "wildberries" },
+          { "text": "Yandex Market", "value": "yandex_market" }
+        ]
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Total Ad Spend (RUB)",
+      "type": "stat",
+      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
+      "datasource": "ClickHouse",
+      "targets": [
+        {
+          "rawSql": "SELECT sum(spend) FROM campaign_daily_stats WHERE stat_date >= today() - 1",
+          "format": "table"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "currencyRUB", "decimals": 0 }
+      }
+    },
+    {
+      "id": 2,
+      "title": "Attributed Revenue (RUB)",
+      "type": "stat",
+      "gridPos": { "x": 6, "y": 0, "w": 6, "h": 4 },
+      "datasource": "ClickHouse",
+      "targets": [
+        {
+          "rawSql": "SELECT sum(order_amount) FROM attributions WHERE toDate(order_at) >= today() - 1",
+          "format": "table"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "currencyRUB", "decimals": 0 }
+      }
+    },
+    {
+      "id": 3,
+      "title": "ROAS (last 24h)",
+      "type": "stat",
+      "gridPos": { "x": 12, "y": 0, "w": 6, "h": 4 },
+      "datasource": "ClickHouse",
+      "targets": [
+        {
+          "rawSql": "SELECT sum(order_amount) / nullIf(sum(spend), 0) FROM campaign_daily_stats cs LEFT JOIN attributions a ON cs.campaign_id = a.campaign_id WHERE cs.stat_date >= today() - 1",
+          "format": "table"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 2,
+          "thresholds": {
+            "steps": [
+              { "value": 0, "color": "red" },
+              { "value": 2, "color": "yellow" },
+              { "value": 4, "color": "green" }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 4,
+      "title": "Attributed Orders",
+      "type": "stat",
+      "gridPos": { "x": 18, "y": 0, "w": 6, "h": 4 },
+      "datasource": "ClickHouse",
+      "targets": [
+        {
+          "rawSql": "SELECT count() FROM attributions WHERE toDate(order_at) >= today() - 1",
+          "format": "table"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Daily Spend & Revenue (30d)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 4, "w": 24, "h": 10 },
+      "datasource": "ClickHouse",
+      "targets": [
+        {
+          "rawSql": "SELECT stat_date, sum(spend) as spend, sum(revenue) as revenue FROM campaign_daily_stats WHERE stat_date >= today() - 30 GROUP BY stat_date ORDER BY stat_date",
+          "format": "time_series"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Top 10 Campaigns by ROAS",
+      "type": "table",
+      "gridPos": { "x": 0, "y": 14, "w": 12, "h": 10 },
+      "datasource": "ClickHouse",
+      "targets": [
+        {
+          "rawSql": "SELECT campaign_id, sum(revenue)/nullIf(sum(spend),0) as roas, sum(spend) as spend, sum(revenue) as revenue FROM campaign_daily_stats WHERE stat_date >= today() - 7 GROUP BY campaign_id ORDER BY roas DESC LIMIT 10",
+          "format": "table"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Clicks by Platform (last 24h)",
+      "type": "barchart",
+      "gridPos": { "x": 12, "y": 14, "w": 12, "h": 10 },
+      "datasource": "ClickHouse",
+      "targets": [
+        {
+          "rawSql": "SELECT ad_platform, count() as clicks FROM clicks WHERE toDate(ts) >= today() - 1 GROUP BY ad_platform ORDER BY clicks DESC",
+          "format": "table"
+        }
+      ]
+    }
+  ]
+}

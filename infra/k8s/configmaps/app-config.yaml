@@ -1,0 +1,50 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: attribly
+data:
+  # ── Application ──────────────────────────────────────────────────────────────
+  APP_ENV: "production"
+  JWT_ALGORITHM: "HS256"
+  JWT_EXPIRE_MINUTES: "1440"
+
+  # ── PostgreSQL ───────────────────────────────────────────────────────────────
+  POSTGRES_HOST: "postgres"
+  POSTGRES_PORT: "5432"
+  POSTGRES_DB: "attribly"
+  POSTGRES_USER: "attribly"
+
+  # ── ClickHouse ───────────────────────────────────────────────────────────────
+  CLICKHOUSE_HOST: "clickhouse"
+  CLICKHOUSE_PORT: "8123"
+  CLICKHOUSE_DB: "attribly"
+  CLICKHOUSE_USER: "attribly"
+
+  # ── Redis ────────────────────────────────────────────────────────────────────
+  REDIS_HOST: "redis"
+  REDIS_PORT: "6379"
+  REDIS_DB: "0"
+
+  # ── Kafka ────────────────────────────────────────────────────────────────────
+  KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
+  KAFKA_TOPIC_CLICKS: "attribly.clicks"
+  KAFKA_TOPIC_ORDERS: "attribly.orders"
+  KAFKA_TOPIC_EVENTS: "attribly.events"
+  KAFKA_GROUP_ID: "etl-consumer"
+
+  # ── MinIO ────────────────────────────────────────────────────────────────────
+  MINIO_ENDPOINT: "minio:9000"
+  MINIO_BUCKET: "attribly-reports"
+  MINIO_BUCKET_RAW: "attribly-raw"
+  MINIO_BUCKET_PROCESSED: "attribly-processed"
+  MINIO_SECURE: "false"
+  MINIO_PRESIGNED_TTL: "3600"
+
+  # ── Internal service config ──────────────────────────────────────────────────
+  SEGMENT_QUEUE_KEY: "queue:segment_jobs"
+  WORKER_POLL_INTERVAL: "2.0"
+  NOTIFICATIONS_CHANNEL: "notifications"
+  BATCH_SIZE: "500"
+  FLUSH_INTERVAL: "5.0"
+  MODELS_DIR: "/app/models"
