@@ -1,12 +1,12 @@
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm install --legacy-peer-deps
+COPY package.json ./
+RUN yarn install --ignore-engines --no-lockfile
 
 COPY . .
-RUN npm run build
+RUN yarn build
 
 # Stage 2: serve static files with nginx
 FROM nginx:1.27-alpine
