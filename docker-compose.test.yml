@@ -46,7 +46,7 @@ services:
       context: ./services/api-gateway
       dockerfile: ../../infra/docker/Dockerfile.python
     restart: unless-stopped
-    env_file: .env.test
+    env_file: .env
     environment:
       SERVICE_NAME: api-gateway
     ports:
@@ -56,8 +56,6 @@ services:
         condition: service_healthy
       redis:
         condition: service_started
-    volumes:
-      - ./services/api-gateway:/app
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 15s
@@ -72,9 +70,6 @@ services:
     restart: unless-stopped
     environment:
       VITE_API_URL: http://localhost:8080
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
     depends_on:
       - api-gateway
 
