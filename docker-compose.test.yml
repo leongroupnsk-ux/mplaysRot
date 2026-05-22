@@ -45,6 +45,7 @@ services:
     build:
       context: ./services/api-gateway
       dockerfile: ../../infra/docker/Dockerfile.python
+      network: host
     restart: unless-stopped
     env_file: .env
     environment:
@@ -67,6 +68,7 @@ services:
     build:
       context: ./frontend
       dockerfile: ../infra/docker/Dockerfile.node
+      network: host
     restart: unless-stopped
     environment:
       VITE_API_URL: http://localhost:8080
