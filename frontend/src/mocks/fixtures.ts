@@ -322,6 +322,7 @@ export let INTEGRATIONS: Integration[] = [
 export const STORES: Store[] = [
   {
     id: "store-001",
+    connection_id: "conn-001",
     provider: "ozon",
     external_store_id: "ozon-seller-00112233",
     name: "ИП Иванов — Ozon",
@@ -332,6 +333,7 @@ export const STORES: Store[] = [
   },
   {
     id: "store-002",
+    connection_id: "conn-002",
     provider: "wildberries",
     external_store_id: "wb-seller-44556677",
     name: "ООО Ромашка — WB",
